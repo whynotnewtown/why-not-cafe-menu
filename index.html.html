@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHY NOT? Cafe — Order Online</title>
+<style>
+:root{--yellow:#ffd21c;--red:#e53935;--black:#111;--bg:#f7f7f7;--white:#fff}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111}
+header{background:#111;color:#fff;padding:22px 16px 18px;text-align:center;position:sticky;top:0;z-index:5;border-bottom:4px solid var(--yellow)}
+.logo{font-size:38px;font-weight:1000;letter-spacing:2px;color:var(--yellow);text-shadow:2px 2px 0 var(--red);margin:0}
+.tag{font-weight:700;font-size:13px;letter-spacing:1px;margin-top:5px}
+.address{font-size:12px;margin-top:8px;color:#ddd}
+.wrap{max-width:760px;margin:auto;padding:14px 12px 150px}
+h2{font-size:22px;margin:22px 2px 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#fff;border-radius:14px;padding:13px;box-shadow:0 2px 10px #00000010}
+.name{font-weight:800;font-size:15px;line-height:1.25}.price{font-weight:900;color:var(--red);margin:7px 0}
+.note{font-size:11px;color:#666}.controls{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+button{border:0;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer}
+.add{background:var(--yellow);color:#111}.minus,.plus{width:34px;height:34px;padding:0;background:#111;color:#fff;font-size:18px}
+.qty{min-width:18px;text-align:center;font-weight:900}
+.box{background:#fff;border-radius:14px;padding:14px;margin-top:16px;box-shadow:0 2px 10px #00000010}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:9px;margin:6px 0;font-size:15px}
+textarea{width:100%;min-height:65px;padding:12px;border:1px solid #ddd;border-radius:9px;font-size:14px}
+.summary-row{display:flex;justify-content:space-between;padding:5px 0}.total{font-size:21px;font-weight:900;border-top:1px solid #ddd;margin-top:8px;padding-top:10px}
+.orderbar{position:fixed;bottom:0;left:0;right:0;background:#111;color:#fff;padding:12px;z-index:10;box-shadow:0 -3px 15px #0003}
+.orderbar-inner{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}.order-info{flex:1}.order-btn{background:#25D366;color:#fff;font-size:16px;padding:13px 17px;border-radius:12px}
+.empty{text-align:center;color:#777;padding:12px}.small{font-size:12px;color:#777}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.logo{font-size:34px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">WHY NOT?</div>
+  <div class="tag">FOOD • FUN • CRAVINGS.</div>
+  <div class="address">Opposite BT Gate, DLF 2, New Town, Kolkata - 700156</div>
+</header>
+
+<main class="wrap">
+<div id="menu"></div>
+
+<div class="box">
+  <h2 style="margin-top:0">📝 Order Details</h2>
+  <input id="name" placeholder="Your name">
+  <input id="table" placeholder="Table number (e.g. 5)">
+  <textarea id="notes" placeholder="Special instructions (optional)"></textarea>
+  <div id="cartSummary" class="small">Your cart is empty.</div>
+</div>
+</main>
+
+<div class="orderbar">
+  <div class="orderbar-inner">
+    <div class="order-info"><b id="itemCount">0 items</b><br><span id="barTotal">₹0</span></div>
+    <button class="order-btn" onclick="sendWhatsApp()">🟢 Order on WhatsApp</button>
+  </div>
+</div>
+
+<script>
+const WHATSAPP="919142951691";
+
+const menu = [
+ ["Chicken Steam Momo","Momos",60,"6 pcs"],["Chicken Fried Momo","Momos",70,"6 pcs"],["Chicken Jhol Momo","Momos",100,"6 pcs"],["Veg Momo","Momos",40,"6 pcs"],["Veg Fried Momo","Momos",50,"6 pcs"],
+ ["Hakka Noodles - Veg","Hakka Noodles",60,""],["Hakka Noodles - Egg","Hakka Noodles",70,""],["Hakka Noodles - Chicken","Hakka Noodles",80,""],["Hakka Noodles - Egg + Chicken","Hakka Noodles",100,""],
+ ["Veg Schezwan Noodles","Hakka Noodles",70,""],["Egg Schezwan Noodles","Hakka Noodles",80,""],["Chicken Schezwan Noodles","Hakka Noodles",90,""],["Egg + Chicken Schezwan Noodles","Hakka Noodles",110,""],
+ ["Chicken Popcorn - Small","Chicken Specials",60,"12 pcs"],["Chicken Popcorn - Medium","Chicken Specials",90,"17 pcs"],["Chicken Popcorn - Large","Chicken Specials",120,"26 pcs"],["Crispy Wings","Chicken Specials",40,"1 pc"],["Chicken Strips","Chicken Specials",70,"4 pcs"],["Crispy Leg","Chicken Specials",75,"1 pc / 180 gm"],
+ ["Crispy Chicken Burger","Burgers",75,"Cheese included"],["Veg Burger","Burgers",65,"Cheese included"],
+ ["Corn Sandwich","Sandwiches",60,""],["Cheese Corn Sandwich","Sandwiches",70,""],["Chicken Sandwich","Sandwiches",80,""],["Chicken Cheese Sandwich","Sandwiches",90,""],
+ ["Salted French Fries","French Fries",60,""],["Peri Peri French Fries","French Fries",70,""],["Cheese Loaded Fries","French Fries",90,""],
+ ["Veg Red Sauce Pasta","Pasta",60,""],["Veg White Sauce Pasta","Pasta",70,""],["Veg Pink Sauce Pasta","Pasta",90,""],["Chicken Red Sauce Pasta","Pasta",90,""],["Chicken White Sauce Pasta","Pasta",100,""],["Chicken Pink Sauce Pasta","Pasta",110,""],
+ ["Veg Fried Maggie","Maggie",50,""],["Egg Fried Maggie","Maggie",60,""],["Chicken Fried Maggie","Maggie",90,""],
+ ["Cold Coffee","Beverages",60,""],["Premium Cold Coffee","Beverages",100,""],
+];
+
+const cart={};
+const cats=[...new Set(menu.map(x=>x[1]))];
+
+function render(){
+ const root=document.getElementById('menu'); root.innerHTML='';
+ cats.forEach(cat=>{
+   const section=document.createElement('section'); section.innerHTML=`<h2>${cat}</h2><div class="grid"></div>`;
+   const grid=section.querySelector('.grid');
+   menu.filter(x=>x[1]===cat).forEach(([name,cat,price,note])=>{
+     const c=document.createElement('div'); c.className='card';
+     c.innerHTML=`<div class="name">${name}</div><div class="price">₹${price}</div>${note?`<div class="note">${note}</div>`:''}
+     <div class="controls" style="margin-top:9px" id="ctrl"></div>`;
+     const ctrl=c.querySelector('#ctrl');
+     if(cart[name]){
+       ctrl.innerHTML=`<button class="minus">−</button><span class="qty">${cart[name]}</span><button class="plus">+</button>`;
+       ctrl.querySelector('.minus').onclick=()=>change(name,-1);
+       ctrl.querySelector('.plus').onclick=()=>change(name,1);
+     }else{
+       ctrl.innerHTML=`<button class="add">ADD</button>`;
+       ctrl.querySelector('.add').onclick=()=>change(name,1);
+     }
+     grid.appendChild(c);
+   });
+   root.appendChild(section);
+ });
+ updateSummary();
+}
+function change(name,d){cart[name]=(cart[name]||0)+d;if(cart[name]<=0)delete cart[name];render();}
+function totals(){
+ let count=0,total=0;
+ for(const [name,q] of Object.entries(cart)){const p=menu.find(x=>x[0]===name)[2];count+=q;total+=p*q}
+ return {count,total};
+}
+function updateSummary(){
+ const {count,total}=totals();
+ document.getElementById('itemCount').textContent=`${count} item${count===1?'':'s'}`;
+ document.getElementById('barTotal').textContent=`₹${total}`;
+ const s=document.getElementById('cartSummary');
+ if(!count){s.innerHTML='Your cart is empty.';return}
+ s.innerHTML=Object.entries(cart).map(([n,q])=>{const p=menu.find(x=>x[0]===n)[2];return `<div class="summary-row"><span>${n} × ${q}</span><b>₹${p*q}</b></div>`}).join('')+`<div class="summary-row total"><span>Total</span><span>₹${total}</span></div>`;
+}
+function sendWhatsApp(){
+ const {count,total}=totals();
+ if(!count){alert('Please add at least one item to your cart.');return}
+ const name=document.getElementById('name').value.trim()||'Customer';
+ const table=document.getElementById('table').value.trim();
+ const notes=document.getElementById('notes').value.trim();
+ let msg=`Hello WHY NOT? Cafe! 👋\n\nI would like to place an order.\n👤 Name: ${name}`;
+ if(table)msg+=`\n🪑 Table No: ${table}`;
+ msg+=`\n\n🛒 ORDER:\n`;
+ for(const [n,q] of Object.entries(cart)){const p=menu.find(x=>x[0]===n)[2];msg+=`• ${n} × ${q} — ₹${p*q}\n`}
+ msg+=`\n💰 Total: ₹${total}`;
+ if(notes)msg+=`\n\n📝 Special Instructions: ${notes}`;
+ msg+=`\n\nThank you!`;
+ window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+render();
+</script>
+</body>
+</html>
